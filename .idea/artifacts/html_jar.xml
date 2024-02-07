@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="html:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/html_jar</output-path>
+    <root id="archive" name="html_jar.jar">
+      <element id="module-output" name="changeutf8" />
+      <element id="directory" name="jar" />
+    </root>
+  </artifact>
+</component>
