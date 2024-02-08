@@ -1,4 +1,7 @@
 import java.io.*;
+import java.nio.channels.FileChannel;
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -27,12 +30,14 @@ class BatchEncoder {
         }
         for (int i = 0; i < childs.length; i++) {
             if (childs[i].isDirectory()) {
+                if (!childs[i].exists()) {
+                    childs[i].mkdirs();
+                }
                 tree(childs[i]);
             } else if (childs[i].isFile()) {
                 parse(childs[i]);
             }
         }
-
     }
 
     public void parse(File f) {
@@ -46,19 +51,22 @@ class BatchEncoder {
             while ((line = reader.readLine()) != null) {
                 contentBuilder.append(line).append("\n");
             }
-            String oldString = "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=gb2312\">";
-            String newString = "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no\">\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">";
+            String oldString = Main.oldString;
+            String newString = Main.newString;
+
             String modifiedContent = contentBuilder.toString().replace(oldString, newString); 
             reader.close(); // 关闭原始文件
 
             f.deleteOnExit();
 
-            BufferedWriter writer = new BufferedWriter(new FileWriter(f.getName(),UTF_8)); // 重写同名文件
 
+            FileWriter fileWriter = new  FileWriter(f.getName(),UTF_8);
+            BufferedWriter writer = new BufferedWriter(fileWriter); // 重写同名文件
             writer.write(modifiedContent.toString()); // 将修改后的内容写入文件
 
             writer.flush(); // 清空输出流
             writer.close(); // 关闭文件
+
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -66,8 +74,52 @@ class BatchEncoder {
         } finally {
 
         }
-
     }
 
+
+    public static void copyDirectory(String sourceFolderPath, String destinationFolderPath) throws IOException {
+        File sourceFolder = new File(sourceFolderPath);
+        if (!sourceFolder.exists()) {
+            throw new IllegalArgumentException("Source folder does not exist.");
+        }
+
+        File destinationFolder = new File(destinationFolderPath);
+        if(!destinationFolder.exists()){
+            destinationFolder.mkdirs();
+        }
+        if (destinationFolder.isFile() || !destinationFolder.getParentFile().exists()) {
+            throw new IllegalArgumentException("Destination is a file or parent directory does not exist.");
+        }
+
+        for (File file : sourceFolder.listFiles()) {
+            if (file.isDirectory()) {
+                copyDirectory(file.getAbsolutePath(), destinationFolder.getAbsolutePath());
+            } else {
+                copyFile(file.getAbsolutePath(), destinationFolder.getAbsolutePath());
+            }
+        }
+    }
+
+    private static void copyFile(String sourceFilePath, String destinationFolderPath) throws IOException {
+        File sourceFile = new File(sourceFilePath);
+        if (!sourceFile.exists()) {
+            throw new IllegalArgumentException("Source file does not exist.");
+        }
+        if (sourceFile.getName().endsWith(".html") || sourceFile.getName().endsWith(".htm") ||
+                sourceFile.getName().endsWith(".HTML") ||  sourceFile.getName().endsWith(".HTM")){
+            File destinationFile = new File(destinationFolderPath + "/" + sourceFile.getName());
+            try (InputStream inStream = new FileInputStream(sourceFile); OutputStream outStream = new FileOutputStream(destinationFile)) {
+                byte[] buffer = new byte[1024];
+                int length;
+
+                while ((length = inStream.read(buffer)) > 0) {
+                    outStream.write(buffer, 0, length);
+                }
+            } catch (IOException e) {
+                System.out.println("Error copying file: " + e.getMessage());
+            }
+            sourceFile.deleteOnExit();
+        }
+    }
 }
 
