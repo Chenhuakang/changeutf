@@ -3,6 +3,7 @@ import java.nio.channels.FileChannel;
 import java.nio.file.CopyOption;
 import java.nio.file.Files;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 class HTMLFilter implements FilenameFilter {
@@ -17,6 +18,7 @@ class HTMLFilter implements FilenameFilter {
 
 class BatchEncoder {
     String oldFile = null;
+
     public BatchEncoder(String oldFile) {
         this.oldFile = oldFile;
         File f = new File(oldFile);
@@ -41,10 +43,11 @@ class BatchEncoder {
     }
 
     public void parse(File f) {
-        String s = "";
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(f, UTF_8)); // 打开原始文件进行读取
-
+//           BufferedReader reader = new BufferedReader(new FileReader(f, UTF_8)); // 打开原始文件进行读取
+//           BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(f),UTF_8));
+             java.nio.charset.Charset defaultCharset = defaultCharset = java.nio.charset.Charset.forName("GBK");
+            BufferedReader reader = new BufferedReader(new FileReader(f, defaultCharset));
             StringBuilder contentBuilder = new StringBuilder(); // 构造新的文件内容字符串
             String line;
 
@@ -54,11 +57,13 @@ class BatchEncoder {
             String oldString = Main.oldString;
             String newString = Main.newString;
 
-            String modifiedContent = contentBuilder.toString().replace(oldString, newString); 
+            String modifiedContent = contentBuilder.toString().replace(oldString, newString);
+
+
+
             reader.close(); // 关闭原始文件
 
-            f.deleteOnExit();
-
+//            f.deleteOnExit();
 
             FileWriter fileWriter = new  FileWriter(f.getName(),UTF_8);
             BufferedWriter writer = new BufferedWriter(fileWriter); // 重写同名文件
