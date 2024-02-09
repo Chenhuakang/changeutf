@@ -58,12 +58,9 @@ class BatchEncoder {
             String newString = Main.newString;
 
             String modifiedContent = contentBuilder.toString().replace(oldString, newString);
-
-
-
             reader.close(); // 关闭原始文件
 
-//            f.deleteOnExit();
+            f.deleteOnExit();
 
             FileWriter fileWriter = new  FileWriter(f.getName(),UTF_8);
             BufferedWriter writer = new BufferedWriter(fileWriter); // 重写同名文件
